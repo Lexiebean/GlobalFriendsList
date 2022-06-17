@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: Global Friends List
+## Author: Lexie
+## Notes: Carry your friends list between toons. And check your friends list for any missing, dead and Unknown players and attempts to tell you who they were.
+## Version: 1
+## SavedVariables: GlobalFriendsList_FriendsList_gl GlobalFriendsList_MarkDelete
+## SavedVariablesPerCharacter: GlobalFriendsList_FriendsList_lc GlobalList
+GlobalFriendsList.lua
