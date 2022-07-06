@@ -129,7 +129,6 @@ function ChatFrame_OnEvent(event)
 				if HardcoreDeath_Find then
 					if HardcoreDeath_Find == addedfriend then
 						GFLExit = true
-						print("A HC died, skipping.")
 					end
 				end
 			end
