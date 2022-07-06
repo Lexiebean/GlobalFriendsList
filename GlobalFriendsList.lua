@@ -21,11 +21,11 @@ GFLDelay:SetScript("OnShow", function()
 end)
 
 GFLDelay:SetScript("OnHide", function()
-    FriendsList()
+    GlobalFriendsList()
 end)
 
 GFLDelay:SetScript("OnUpdate", function()
-    local plus = 30 --seconds
+    local plus = 60 --seconds
     local gt = GetTime() * 1000
     local st = (this.startTime + plus) * 1000
     if gt >= st then
@@ -33,7 +33,7 @@ GFLDelay:SetScript("OnUpdate", function()
     end
 end)
 
-function FriendsList()
+function GlobalFriendsList()
 	local GlobalFriendsList_FriendsList = {}
 	-- Get the local or global friendslist
 	if (GlobalList == true) then
@@ -50,7 +50,7 @@ function FriendsList()
     for i=1, GetNumFriends() do
 		-- Remove any Unknowns
 		name = GetFriendInfo(i)
-		if (name == "Unknown") then
+		if (name == "Unknown") or (name == nil) then
 			RemoveFriend(i)
 		-- Remove any friends that were deleted while playing another toon.
 		elseif (tablefind(GlobalFriendsList_MarkDelete,name)) then
@@ -92,37 +92,58 @@ end
 
 GlobalFriendsList_ChatFrame_OnEvent = ChatFrame_OnEvent
 function ChatFrame_OnEvent(event)
+	local GFLExit = false
 	if (event == "CHAT_MSG_SYSTEM") then
 		_, _, removedfriend = string.find(arg1,"(%a+) removed from friends")
 		_, _, addedfriend = string.find(arg1,"(%a+) added to friends")
 		if (removedfriend) then
-			-- If we're using a global list and we removed them, mark them for deletion across all toons.
-			if (GlobalList == true) then
-				-- Only make them for deletion if they haven't already been marked 
-				if not tablefind(GlobalFriendsList_MarkDelete,removedfriend) then
-					table.insert(GlobalFriendsList_MarkDelete,removedfriend)
+			if IsAddOnLoaded("HardcoreDeath") then
+				if HardcoreDeath_Find then
+					if HardcoreDeath_Find == removedfriend then
+						GFLExit = true
+					end
 				end
 			end
-			-- Remove them from the global list
-			if tablefind(GlobalFriendsList_FriendsList_gl,removedfriend) then
-				table.remove(GlobalFriendsList_FriendsList_gl,tablefind(GlobalFriendsList_FriendsList_gl,removedfriend))
+			if (GFLExit == false) then
+				-- If we're using a global list and we removed them, mark them for deletion across all toons.
+				if (GlobalList == true) then
+					-- Only make them for deletion if they haven't already been marked 
+					if not tablefind(GlobalFriendsList_MarkDelete,removedfriend) then
+						table.insert(GlobalFriendsList_MarkDelete,removedfriend)
+					end
+				end
+				-- Remove them from the global list
+				if tablefind(GlobalFriendsList_FriendsList_gl,removedfriend) then
+					table.remove(GlobalFriendsList_FriendsList_gl,tablefind(GlobalFriendsList_FriendsList_gl,removedfriend))
+				end
+				-- Remove them from the local list
+				if tablefind(GlobalFriendsList_FriendsList_lc,removedfriend) then
+					table.remove(GlobalFriendsList_FriendsList_lc,tablefind(GlobalFriendsList_FriendsList_lc,removedfriend))
+				end
+			else
 			end
-			-- Remove them from the local list
-			if tablefind(GlobalFriendsList_FriendsList_lc,removedfriend) then
-				table.remove(GlobalFriendsList_FriendsList_lc,tablefind(GlobalFriendsList_FriendsList_lc,removedfriend))
-			end
+			
 		end
 		if (addedfriend) then
-			if tablefind(GlobalFriendsList_MarkDelete,addedfriend) then
-				table.remove(GlobalFriendsList_MarkDelete,tablefind(GlobalFriendsList_MarkDelete,addedfriend))
+			if IsAddOnLoaded("HardcoreDeath") then
+				if HardcoreDeath_Find then
+					if HardcoreDeath_Find == addedfriend then
+						GFLExit = true
+						print("A HC died, skipping.")
+					end
+				end
 			end
-			-- Add new friend to the global or local list
-			if (GlobalList == true) then
-				table.insert(GlobalFriendsList_FriendsList_gl,addedfriend)
-			else
-				table.insert(GlobalFriendsList_FriendsList_lc,addedfriend)
+			if GFLExit == false then
+				if tablefind(GlobalFriendsList_MarkDelete,addedfriend) then
+					table.remove(GlobalFriendsList_MarkDelete,tablefind(GlobalFriendsList_MarkDelete,addedfriend))
+				end
+				-- Add new friend to the global or local list
+				if (GlobalList == true) then
+					table.insert(GlobalFriendsList_FriendsList_gl,addedfriend)
+				else
+					table.insert(GlobalFriendsList_FriendsList_lc,addedfriend)
+				end
 			end
-
 		end
 	end
 	GlobalFriendsList_ChatFrame_OnEvent(event);
@@ -146,10 +167,10 @@ SlashCmdList["GLOBALFRIENDSLIST"] = function(message)
 			GlobalList = true
 		end
 		DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff[GlobalFriendsList]|r Global Friends List:|cffbe5eff ".. tostring(GlobalList))
-		FriendsList()
+		GlobalFriendsList()
 	-- manual run
 	elseif commandlist[1] == "run" then
-		FriendsList()
+		GlobalFriendsList()
 	else
 		DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff[GlobalFriendsList]|r v"..tostring(GetAddOnMetadata("GlobalFriendsList", "Version")))
 		DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff/gfl global|cffaaaaaa - |rGlobal Friends List: |cffbe5eff".. tostring(GlobalList))
